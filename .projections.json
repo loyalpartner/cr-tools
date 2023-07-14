@@ -1,0 +1,34 @@
+{
+  "*.mojom": {
+    "alternate": "out/Debug/gen/{}.mojom.h",
+    "type": "source"
+  },
+  "out/Debug/gen/*.mojom.h": {
+    "alternate": "{}.mojom",
+    "type": "source"
+  },
+  "*.idl": {
+    "alternate": "out/Debug/gen/{}.h",
+    "type": "source"
+  },
+  "out/Debug/gen/*.h": {
+    "alternate": "{}.idl",
+    "type": "source"
+  },
+  "*.json": {
+    "alternate": "out/Debug/gen/{}.h",
+    "type": "source"
+  },
+  "*.cc": {
+    "alternate": "{}_unittest.cc",
+    "type": "source"
+  },
+
+  "*_unittest.cc": {
+    "alternate": "{}.cc",
+    "type": "source"
+  },
+  "*": {
+    "dispatch": "./hydra.sh"
+  }
+}
