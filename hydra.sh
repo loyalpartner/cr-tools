@@ -42,10 +42,13 @@ build(){
 
   local cmd=(autoninja -C $target_dir $target_executable)
 
-  local goma_options=(GOMA_DISABLED=true)
+  local goma_options=()
+
+  export GOMA_DISABLED=true
   if curl --fail http://127.0.0.1:8088 &>/dev/null; then
     goma_options=(GOMA_USE_LOCAL=false GOMA_FALLBACK=false)
     cmd+=(-j 300)
+    unset GOMA_DISABLED
   fi
 
   cmd=(${goma_options[@]} ${cmd[@]})
@@ -77,7 +80,7 @@ run(){
     cmd+=(--user-data-dir=out/data)
   fi
   info ${cmd[@]} ${executable_args[@]}
-  ${cmd[@]} ${executable_args[@]}
+  ${cmd[@]} "${executable_args[@]}"
 }
 
 debug(){
@@ -108,6 +111,31 @@ debug(){
   $SHELL -c "${cmd[*]} ${executable_args[@]}"
 }
 
+attach(){
+  local executable=$target_executable
+
+  pid=$(pgrep -a $executable | fzf --preview '' | cut -d ' ' -f 1)
+
+  if [[ -z $pid ]]; then
+    return
+  fi
+
+  # init_eval_commands
+  local cmd+=(
+    cgdb
+    -iex=\"source -v tools/gdb/gdbinit\"
+    -ex=\"tty /dev/null\"
+    -ex=\"source my.breaks\"
+    -p $pid
+  )
+  if [[ -n $TTY ]]; then
+    cmd+=(-ex=\"tty $TTY\")
+  fi
+
+  info ${cmd[@]}
+  $SHELL -c "${cmd[*]}"
+}
+
 clean_data(){
   [[ -d "out/data" ]] && rm -r out/data
 }
@@ -133,25 +161,30 @@ need_out_dir_and_executable(){
   action=$1
 
   case $action in
-    build_and_run | build | run | debug) return 0 ;;
+    build_and_run | build | run | debug | attach) return 0 ;;
     *) return 1 ;;
   esac
 }
 
 select_action(){
   actions=(
-    build_and_run build run debug 
+    build_and_run build run
+    debug attach
     format_code update_extension_histograms
     clean_data 
+    set_args
     rechoose quit
   )
+  clear
   while true; do
-    clear
     select action in ${actions[@]}; do
       case $action in
         rechoose)
           target_dir=""
           target_executable=""
+          ;;
+        set_args)
+          read executable_args
           ;;
         quit) exit 0; ;;
         clean_data) $action;;
@@ -189,21 +222,37 @@ select_out_dir(){
   done
 }
 
+recent_executables=()
 select_executable(){
   clear
-  target_executables=(chrome content_shell mini_installer unittest quit)
+  target_executables=(chrome content_shell mini_installer other unittest quit)
+  target_executables+=(${recent_executables[@]})
   [[ -n $target_executable ]] && return
   select executable in ${target_executables[@]}; do
     case $executable in
       chrome | content_shell | mini_installer) target_executable=$executable ;;
+      other)
+        target_executable=$(gn ls out/$target_dir/ --type=executable  --as=output | grep -v test| sort | fzf)
+        ;;
       unittest) 
         target_executable=$(gn ls out/$target_dir/ --type=executable --testonly=true --as=output | fzf)
         ;;
-      quit | *) target_executable="";;
+      quit) target_executable="";;
+      *)
+        if [[ ! "${recent_executables[@]}" =~ "$executable" ]]; then
+          target_executable=""
+        else
+          target_executable=$executable
+        fi
+        ;;
     esac
 
     if [[ -z $target_executable ]]; then
       return
+    fi
+
+    if [[ ! "${recent_executables[*]}" =~ "$target_executable" ]]; then
+      recent_executables=(${target_executable[@]} ${recent_executables[@]})
     fi
     break
   done

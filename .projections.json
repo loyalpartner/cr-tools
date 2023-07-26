@@ -15,6 +15,10 @@
     "alternate": "{}.idl",
     "type": "source"
   },
+  "extensions/common/api/_*.json": {
+    "alternate": "out/Debug/gen/extensions/common/api/{}.h",
+    "type": "source"
+  },
   "*.json": {
     "alternate": "out/Debug/gen/{}.h",
     "type": "source"
