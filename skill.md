@@ -14,11 +14,13 @@ tail -n +4 webstore_private.json | jq '.[].functions|.[].name
 
 ### chromium pretty print
 
-`source tools/gdb/gdbinit` 后, std::string 没有启用 pretty print, 原因是
-libc++(`buildtools/third_party/libc++`) 默认的 
-`\_LIBCPP_ABI_NAMESPACE` 默认为 Cr, std::string 在 gdb 里
-的类型其实是 `std::Cr::string`, 而 libcxx 默认的 printers.py 默认的
-`\_LIBCPP_ABI_NAMESPACE` 是 `__x`
+chromium 提供了 `tools/gdb/gdbinit`, 用于支持 libc++ 和 chromium 类型的
+pretty-printing. `source tools/gdb/gdbinit` 后发现 pretty-printing 没有
+起作用?
+
+原因是 chromium 里面的 libc++ (buildtools/third_party/libc++/\_\_config\_site) 
+默认的ABI命名空间是修改过的, 是 `std::Cr`, 而其提供的 printers.py 还认为
+默认的ABI命名空间是 `std::__xx`
 
 解决办法
 
