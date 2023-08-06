@@ -3,8 +3,8 @@
 WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-1}
 VMODULE_FILTER=${VMODULE_FILTER:-}
 WAYLAND_OPTION=(
-    --enable-features=UseOzonePlatform 
-    --ozone-platform=wayland
+    # --enable-features=UseOzonePlatform 
+    # --ozone-platform=wayland
   )
 TTY=${TTY:-}
 
@@ -44,17 +44,18 @@ build(){
 
   local goma_options=()
 
-  export GOMA_DISABLED=true
+  # export GOMA_DISABLED=true
   if curl --fail http://127.0.0.1:8088 &>/dev/null; then
     goma_options=(GOMA_USE_LOCAL=false GOMA_FALLBACK=false)
     cmd+=(-j 300)
-    unset GOMA_DISABLED
+    # unset GOMA_DISABLED
   fi
 
   cmd=(${goma_options[@]} ${cmd[@]})
 
   info "${cmd[@]}"
-  echo "${cmd[@]}" | $SHELL
+  echo "${cmd[@]}" | $SHELL &&
+    add_gdb_index $executable
 }
 
 run(){
@@ -71,28 +72,32 @@ run(){
   fi
 
 
-  if [[ $executable =~ .*content_shell$ ]]; then
-    read -p "是否等待调试器附加渲染器进程？[y/n]: " answer
-    if [[ $answer == [Yy] || $answer == [Yy][Ee][Ss] ]]; then
-      cmd+=(--wait-for-debugger-on-navigation)
-    fi
-  else
-    cmd+=(--user-data-dir=out/data)
-  fi
+  case $target_executable in
+    chrome) cmd+=(--user-data-dir=out/data) ;;
+    *) ;;
+  esac
+  # if [[ $executable =~ .*content_shell$ ]]; then
+  #   read -p "是否等待调试器附加渲染器进程？[y/n]: " answer
+  #   if [[ $answer == [Yy] || $answer == [Yy][Ee][Ss] ]]; then
+  #     cmd+=(--wait-for-debugger-on-navigation)
+  #   fi
+  # else
+  #   cmd+=(--user-data-dir=out/data)
+  # fi
   info ${cmd[@]} ${executable_args[@]}
   ${cmd[@]} "${executable_args[@]}"
 }
 
 debug(){
   local executable=out/$target_dir/$target_executable
-  add_gdb_index $executable
 
   # init_eval_commands
   local cmd+=(
     cgdb
     -iex=\"source -v tools/gdb/gdbinit\"
-    -ex=\"tty /dev/null\"
-    -ex=\"source my.breaks\"
+    -iex=\"source -v v8/tools/gdbinit\"
+    # -ex=\"tty /dev/null\"
+    # -ex=\"breakpoints-load\"
   )
   if [[ -n $TTY ]]; then
     cmd+=(-ex=\"tty $TTY\")
@@ -101,12 +106,17 @@ debug(){
 
   [[ $XDG_SESSION_TYPE == wayland ]] && cmd+=(${WAYLAND_OPTION[@]})
 
-  if [[ $executable =~ .*content_shell$ ]]; then
-    # cmd+=(--wait-for-debugger-on-navigation)
-    echo ""
-  else
-    cmd+=(--user-data-dir=out/data)
-  fi
+  case $target_executable in
+    chrome) cmd+=(--user-data-dir=out/data) ;;
+    *) ;;
+  esac
+
+  # if [[ $executable =~ .*content_shell$ ]]; then
+  #   # cmd+=(--wait-for-debugger-on-navigation)
+  #   echo ""
+  # else
+  #   cmd+=(--user-data-dir=out/data)
+  # fi
   info ${cmd[@]} ${executable_args[@]}
   $SHELL -c "${cmd[*]} ${executable_args[@]}"
 }

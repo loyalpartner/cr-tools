@@ -3,6 +3,12 @@
 ## windows 构建
 
 ```bash
+export DEPOT_TOOLS_WIN_TOOLCHAIN_BASE_URL=/home/lee/google/
+export GYP_MSVS_HASH_27370823e7=7f6ff83055
+gclient runhooks
+```
+
+```bash
 target_os = "win"
 is_debug = false
 dcheck_always_on = false
