@@ -1,26 +1,37 @@
 {
   "*.mojom": {
-    "alternate": "out/Debug/gen/{}.mojom.h",
+    "alternate": "out/os/gen/{}.mojom.h",
     "type": "source"
   },
-  "out/Debug/gen/*.mojom.h": {
+  "out/os/gen/*.mojom.h": {
     "alternate": "{}.mojom",
     "type": "source"
   },
-  "*.idl": {
-    "alternate": "out/Debug/gen/{}.h",
+  "*.json": {
+    "alternate": "out/os/gen/{}.h",
     "type": "source"
   },
-  "out/Debug/gen/*.h": {
+  "*.idl": {
+    "alternate": "out/os/gen/{}.h",
+    "type": "source"
+  },
+  "third_party/blink/renderer/*.idl": {
+    "description": "third_party/blink/renderer/bindings/{core,modules}/xxx/xxx.idl",
+    "alternate": "out/os/gen/third_party/blink/renderer/bindings/{dirname|dirname|basename}/v8/v8_{basename}.h",
+    "type": "source"
+  },
+  "out/os/gen/third_party/blink/renderer/bindings/core/v8/v8_*.h": {
+    "description": "",
+    "alternate": "out/os/gen/third_party/blink/renderer/bindings/modules/v8/v8_{}.h",
+    "type": "source"
+  },
+  "out/os/gen/*.h": {
     "alternate": "{}.idl",
     "type": "source"
   },
   "extensions/common/api/_*.json": {
-    "alternate": "out/Debug/gen/extensions/common/api/{}.h",
-    "type": "source"
-  },
-  "*.json": {
-    "alternate": "out/Debug/gen/{}.h",
+    "description": "_api_features.json, _permission_features.json etc.",
+    "alternate": "out/os/gen/extensions/common/api/{}.h",
     "type": "source"
   },
   "*.cc": {

@@ -135,7 +135,7 @@ attach(){
     cgdb
     -iex=\"source -v tools/gdb/gdbinit\"
     -ex=\"tty /dev/null\"
-    -ex=\"source my.breaks\"
+    # -ex=\"source my.breaks\"
     -p $pid
   )
   if [[ -n $TTY ]]; then
